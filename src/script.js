@@ -2,6 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
+import vector from './Physics/vector'
 
 /**
  * Debug
@@ -16,6 +17,26 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+
+const AIR_DENSITY = 1.292
+const FUEL_DENSITY = 750
+// const SEA_LEVEL_PRESSURE = 101325
+const DRAG_COEFF = 0.345 
+
+const paramters = {
+    axesHelper: false,
+    rocket_radius: 1,
+    opening_rocket_radius: 0.5,
+    inner_air_pressure: 377090,
+    gravity: 9.80665,
+    // height: 0,
+    // tempereture: 15,
+    // resistanseCoeff: 0.8,
+    // frictionCoeff: 0.8,
+    empty_rocket_mass: 7500,
+    fuel_mass: 5000,
+};
 
 /**
  * Textures
@@ -88,8 +109,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -131,8 +151,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
