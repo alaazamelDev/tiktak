@@ -22,13 +22,14 @@ const scene = new THREE.Scene()
 const AIR_DENSITY = 1.292
 const FUEL_DENSITY = 750
 // const SEA_LEVEL_PRESSURE = 101325
-const DRAG_COEFF = 0.345 
+// const DRAG_COEFF = 0.345  
 
 const paramters = {
     axesHelper: false,
     rocket_radius: 1,
     opening_rocket_radius: 0.5,
     inner_air_pressure: 377090,
+    drag_coeff : 0.345 ,
     gravity: 9.80665,
     // height: 0,
     // tempereture: 15,
