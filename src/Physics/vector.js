@@ -113,9 +113,9 @@ var vector = {
     },
   
     addTo: function (v2, time) {
+      this._x += v2.getX() * time;
       this._y += v2.getY() * time;
       this._z += v2.getZ() * time;
-      this._x += v2.getX() * time;
     },
   
     // subtractFrom: function(v2) {
