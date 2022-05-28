@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import vector from './Physics/vector'
-
 /**
  * Debug
  */
@@ -14,6 +13,23 @@ const gui = new dat.GUI()
  */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
+
+// const data = {
+//     labels: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+//     datasets: [{
+//         label: 'My First Dataset',
+//         data: [65, 59, 80, 81, 56, 55, 40],
+//         fill: false,
+//         borderColor: 'rgb(75, 192, 192)',
+//         tension: 0.1
+//     }]
+// };
+
+// // Create Chart to visualize velcoity
+// const chart = new Chart('chart', {
+//     type: 'line',
+//     data: data,
+// })
 
 // Scene
 const scene = new THREE.Scene()
@@ -26,6 +42,7 @@ const parameters = {
     exaustVelocity: 500,    // velocity of ejected fuel
     isEngineRunning: true,
 }
+
 
 // gui.add(parameters, 'engineRunningTime').min(0).max(100).step(0.001).name('engine time')
 gui.add(parameters, 'fuelInitialMass').min(1).max(100000).step(1).name('fuel initial mass')
@@ -92,11 +109,11 @@ function calc_acc() {
 function calc_velo(deltaTime, v0) {
     let acceleration = calc_acc()
 
-     // v1 = v0 + acc*dt
-    let velocity = v0.add(vector.create(0, acceleration.multiply(deltaTime).getY(), 0)) 
-
+    // v1 = v0 + acc*dt
+    let velocity = v0.add(vector.create(0, acceleration.multiply(deltaTime).getY(), 0))
     return velocity
 }
+
 
 /**
  * 
@@ -104,14 +121,13 @@ function calc_velo(deltaTime, v0) {
  * @param {vector} p0 represents previous displacement vector values
  * @returns 
  */
-function calc_rocket_disp(deltaTime, p0) {
+function calc_rocket_disp(deltaTime, p0, velocity) {
     let disp;   // rocket displacement
-    let v0 = vector.create(0, 0, 0) // starts from rest
-    let velocity = calc_velo(deltaTime, v0) // current rocket velocity
 
     disp = p0.add(vector.create(0, velocity.multiply(deltaTime).getY(), 0))
     return disp
 }
+
 
 /**
  * Test sphere
@@ -199,12 +215,21 @@ const clock = new THREE.Clock()
 
 // initial displacement 
 let p0 = vector.create(0, 0.5, 0)
+let v0 = vector.create(0, 0, 0) // starts from rest
 
 const tick = () => {
 
+    // console.log('initial velocity on Y: ' + v0.getY(),)
+    // console.log('velocity on Y: ' + v0.getY(),)
+    v0 = calc_velo(clock.getDelta(), v0) // current rocket velocity
+
     // Update Position
-    p0 = calc_rocket_disp(clock.getDelta(), p0)
+    p0 = calc_rocket_disp(clock.getDelta(), p0, v0)
     sphere.position.set(p0.getX(), p0.getY(), p0.getZ())
+
+    //Update Velocity Chart
+
+
 
     // Update controls
     controls.update()

@@ -1,19 +1,26 @@
-*
-{
+* {
     margin: 0;
     padding: 0;
 }
 
 html,
-body
-{
+body {
     overflow: hidden;
 }
 
-.webgl
-{
-    position: fixed;
+.webgl {
+    position: absolute;
+    /* position: fixed; */
     top: 0;
     left: 0;
     outline: none;
+    width: 70%;
+}
+
+#chart {
+    bottom: 0;
+    right: 0;
+    width: 30;
+    color: blue;
+    flex-grow: 1;
 }
