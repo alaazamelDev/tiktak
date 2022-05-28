@@ -6,7 +6,7 @@ import vector from './Physics/vector'
 /**
  * Debug
  */
-const gui = new dat.GUI()
+const gui = new dat.GUI({ width: 300 })
 
 /**
  * Base
@@ -14,45 +14,35 @@ const gui = new dat.GUI()
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
-// const data = {
-//     labels: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
-//     datasets: [{
-//         label: 'My First Dataset',
-//         data: [65, 59, 80, 81, 56, 55, 40],
-//         fill: false,
-//         borderColor: 'rgb(75, 192, 192)',
-//         tension: 0.1
-//     }]
-// };
-
-// // Create Chart to visualize velcoity
-// const chart = new Chart('chart', {
-//     type: 'line',
-//     data: data,
-// })
 
 // Scene
 const scene = new THREE.Scene()
 
 const parameters = {
-    fuelInitialMass: 50000, // fuel mass inside the rocket
-    emptyRocketMass: 20000, // rocket mass when there is no fuel inside it
+    fuelInitialMass: 10000, // fuel mass inside the rocket
+    emptyRocketMass: 1000, // rocket mass when there is no fuel inside it
     flowPercentage: 1,  // how x percent of fuel is being ejected every sec
     gravityAcc: 9.8,    // gravitational acceleration to calculate weight
     exaustVelocity: 500,    // velocity of ejected fuel
     isEngineRunning: true,
 }
 
+const rocketProps = gui.addFolder('Rocket properties')
+rocketProps.add(parameters, 'fuelInitialMass').min(0).max(100000).step(1).name('fuel initial mass')
+rocketProps.add(parameters, 'emptyRocketMass').min(1).max(40000).step(1).name('empty rocket mass')
 
-// gui.add(parameters, 'engineRunningTime').min(0).max(100).step(0.001).name('engine time')
-gui.add(parameters, 'fuelInitialMass').min(1).max(100000).step(1).name('fuel initial mass')
-gui.add(parameters, 'emptyRocketMass').min(1).max(40000).step(1).name('empty rocket mass')
-gui.add(parameters, 'flowPercentage').min(0).max(100).step(0.0001).name('fuel flow percentage')
-gui.add(parameters, 'gravityAcc').min(0).max(40).step(0.00001).name('gravitational acceleration')
-gui.add(parameters, 'exaustVelocity').min(0).max(5000).step(0.1).name('exaust velocity')
-gui.add(parameters, 'isEngineRunning').name('Engine ON/OFF')
+const envProps = gui.addFolder('Environment Properties')
+envProps.add(parameters, 'gravityAcc').min(0).max(40).step(0.00001).name('gravitational acceleration')
+
+const engineControl = gui.addFolder('Engine Control')
+engineControl.add(parameters, 'isEngineRunning').name('Engine ON/OFF')
+engineControl.add(parameters, 'flowPercentage').min(0).max(100).step(0.0001).name('fuel ejecting percenage')
+engineControl.add(parameters, 'exaustVelocity').min(0).max(5000).step(0.1).name('fuel exaust velocity')
 
 
+envProps.open()
+rocketProps.open()
+engineControl.open()
 /**
  * 
  * @returns total mass of rocket (full of fuel)
@@ -124,7 +114,7 @@ function calc_velo(deltaTime, v0) {
 function calc_rocket_disp(deltaTime, p0, velocity) {
     let disp;   // rocket displacement
 
-    disp = p0.add(vector.create(0, velocity.multiply(deltaTime).getY(), 0))
+    disp = p0.add(vector.create(0, velocity.getY(), 0))
     return disp
 }
 
@@ -180,7 +170,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix()
 
     // Update renderer
-    renderer.setSize(sizes.width, sizes.height)
+    // renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
@@ -188,14 +178,14 @@ window.addEventListener('resize', () => {
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 3, 2)
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 1000)
+camera.position.set(0, 0, 20)
 scene.add(camera)
 
 // Controls
-const controls = new OrbitControls(camera, canvas)
-controls.maxPolarAngle = Math.PI / 3;
-controls.enableDamping = true
+// const controls = new OrbitControls(camera, canvas)
+// controls.maxPolarAngle = Math.PI / 3;
+// controls.enableDamping = true
 
 /**
  * Renderer
@@ -217,22 +207,70 @@ const clock = new THREE.Clock()
 let p0 = vector.create(0, 0.5, 0)
 let v0 = vector.create(0, 0, 0) // starts from rest
 
+const outputsData = {
+
+    // velocity
+    veloX: v0.getX(),
+    veloY: v0.getY(),
+    veloZ: v0.getZ(),
+
+    // displacement 
+    dispX: p0.getX(),
+    dispY: p0.getY(),
+    dispZ: p0.getZ(),
+}
+
+// Outputs Display
+const outputs = gui.addFolder('Outputs')
+
+// current velocity
+const velocityPanel = outputs.addFolder('Velocity')
+velocityPanel.add(outputsData, 'veloX').name('x')
+velocityPanel.add(outputsData, 'veloY').name('y')
+velocityPanel.add(outputsData, 'veloZ').name('z')
+
+// current velocity
+const displacementPanel = outputs.addFolder('Displacement')
+displacementPanel.add(outputsData, 'dispX').name('x')
+displacementPanel.add(outputsData, 'dispY').name('y')
+displacementPanel.add(outputsData, 'dispZ').name('z')
+
+
+outputs.open()
+velocityPanel.open()
+displacementPanel.open()
+
+
+function updateOutputs(velo, disp) {
+
+    // update velocity
+    outputsData.veloX = velo.getX()
+    outputsData.veloY = velo.getY()
+    outputsData.veloZ = velo.getZ()
+
+    // update displacement
+    outputsData.dispX = disp.getX()
+    outputsData.dispY = disp.getY()
+    outputsData.dispZ = disp.getZ()
+
+}
+
 const tick = () => {
 
-    // console.log('initial velocity on Y: ' + v0.getY(),)
-    // console.log('velocity on Y: ' + v0.getY(),)
     v0 = calc_velo(clock.getDelta(), v0) // current rocket velocity
 
     // Update Position
     p0 = calc_rocket_disp(clock.getDelta(), p0, v0)
-    sphere.position.set(p0.getX(), p0.getY(), p0.getZ())
+    sphere.position.set(p0.getX(), p0.getY() * 0.01, p0.getZ())
 
-    //Update Velocity Chart
+    camera.position.set(sphere.position.x, sphere.position.y, sphere.position.z - 5)
+    camera.lookAt(sphere.position)
 
-
+    updateOutputs(v0, p0)
+    outputs.updateDisplay()
 
     // Update controls
-    controls.update()
+    // controls.update()
 
     // Render
     renderer.render(scene, camera)

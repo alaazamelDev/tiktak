@@ -14,13 +14,23 @@ body {
     top: 0;
     left: 0;
     outline: none;
-    width: 70%;
+    display: block;
+    flex: 3;
+}
+
+#container {
+    position: relative;
+    /* makes this the origin of its children */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
 }
 
 #chart {
-    bottom: 0;
-    right: 0;
-    width: 30;
-    color: blue;
-    flex-grow: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    flex: 1;
+    background-color: red;
 }
