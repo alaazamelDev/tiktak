@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import vector from './Physics/vector'
-
 /**
  * Debug
  */
@@ -15,55 +14,127 @@ const gui = new dat.GUI()
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
+// const data = {
+//     labels: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+//     datasets: [{
+//         label: 'My First Dataset',
+//         data: [65, 59, 80, 81, 56, 55, 40],
+//         fill: false,
+//         borderColor: 'rgb(75, 192, 192)',
+//         tension: 0.1
+//     }]
+// };
+
+// // Create Chart to visualize velcoity
+// const chart = new Chart('chart', {
+//     type: 'line',
+//     data: data,
+// })
+
 // Scene
 const scene = new THREE.Scene()
 
+const parameters = {
+    fuelInitialMass: 50000, // fuel mass inside the rocket
+    emptyRocketMass: 20000, // rocket mass when there is no fuel inside it
+    flowPercentage: 1,  // how x percent of fuel is being ejected every sec
+    gravityAcc: 9.8,    // gravitational acceleration to calculate weight
+    exaustVelocity: 500,    // velocity of ejected fuel
+    isEngineRunning: true,
+}
 
-const AIR_DENSITY = 1.292
-const FUEL_DENSITY = 750
-// const SEA_LEVEL_PRESSURE = 101325
-// const DRAG_COEFF = 0.345  
 
-const paramters = {
-    axesHelper: false,
-    rocket_radius: 1,
-    opening_rocket_radius: 0.5,
-    inner_air_pressure: 377090,
-    drag_coeff : 0.345 ,
-    gravity: 9.80665,
-    // height: 0,
-    // tempereture: 15,
-    // resistanseCoeff: 0.8,
-    // frictionCoeff: 0.8,
-    empty_rocket_mass: 7500,
-    fuel_mass: 5000,
-};
+// gui.add(parameters, 'engineRunningTime').min(0).max(100).step(0.001).name('engine time')
+gui.add(parameters, 'fuelInitialMass').min(1).max(100000).step(1).name('fuel initial mass')
+gui.add(parameters, 'emptyRocketMass').min(1).max(40000).step(1).name('empty rocket mass')
+gui.add(parameters, 'flowPercentage').min(0).max(100).step(0.0001).name('fuel flow percentage')
+gui.add(parameters, 'gravityAcc').min(0).max(40).step(0.00001).name('gravitational acceleration')
+gui.add(parameters, 'exaustVelocity').min(0).max(5000).step(0.1).name('exaust velocity')
+gui.add(parameters, 'isEngineRunning').name('Engine ON/OFF')
+
 
 /**
- * Textures
+ * 
+ * @returns total mass of rocket (full of fuel)
  */
-const textureLoader = new THREE.TextureLoader()
-const cubeTextureLoader = new THREE.CubeTextureLoader()
+function rocketInitialMass() {
+    return parameters.fuelInitialMass + parameters.emptyRocketMass;
+}
 
-const environmentMapTexture = cubeTextureLoader.load([
-    '/textures/environmentMaps/0/px.png',
-    '/textures/environmentMaps/0/nx.png',
-    '/textures/environmentMaps/0/py.png',
-    '/textures/environmentMaps/0/ny.png',
-    '/textures/environmentMaps/0/pz.png',
-    '/textures/environmentMaps/0/nz.png'
-])
+/**
+ * Calculate the acceleration of the rocket
+ */
+
+function calc_thurst() {
+    // 1% of fuel mass is beiging ejected every second
+    let massFlowRate = - parameters.flowPercentage * parameters.fuelInitialMass * 0.1
+
+    // Thrust Force
+    let thrust = parameters.exaustVelocity * massFlowRate
+    return thrust
+}
+
+function calc_weight() {
+    // Weight Force
+    let weight = parameters.gravityAcc * rocketInitialMass()
+    return weight
+}
+
+function calc_acc() {
+    let thrust = 0;
+    let weight = 0;
+    let acceleration
+
+    // if engine is turned on, add thrust effect
+    if (parameters.isEngineRunning) {
+        thrust = calc_thurst()
+    }
+
+    // calculate weight
+    weight = calc_weight()
+
+    // todo: add rest forces
+    console.log('thrust: ' + thrust)
+
+    acceleration = vector.create(0, (-thrust - weight) / rocketInitialMass(), 0)
+
+    return acceleration
+}
+
+/**
+ * 
+ * @param {double} deltaTime represents change in time 
+ * @param {vector} v0 represents previous velocity vector values
+ */
+function calc_velo(deltaTime, v0) {
+    let acceleration = calc_acc()
+
+    // v1 = v0 + acc*dt
+    let velocity = v0.add(vector.create(0, acceleration.multiply(deltaTime).getY(), 0))
+    return velocity
+}
+
+
+/**
+ * 
+ * @param {double} deltaTime represents change in time
+ * @param {vector} p0 represents previous displacement vector values
+ * @returns 
+ */
+function calc_rocket_disp(deltaTime, p0, velocity) {
+    let disp;   // rocket displacement
+
+    disp = p0.add(vector.create(0, velocity.multiply(deltaTime).getY(), 0))
+    return disp
+}
+
 
 /**
  * Test sphere
  */
 const sphere = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture
-    })
+    new THREE.SphereBufferGeometry(0.5, 16, 16),
+    new THREE.MeshNormalMaterial({ flatShading: true })
 )
 sphere.castShadow = true
 sphere.position.y = 0.5
@@ -75,13 +146,9 @@ scene.add(sphere)
 const floor = new THREE.Mesh(
     new THREE.PlaneBufferGeometry(10, 10),
     new THREE.MeshStandardMaterial({
-        color: '#777777',
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture
+        color: '#29524A'
     })
 )
-floor.receiveShadow = true
 floor.rotation.x = - Math.PI * 0.5
 scene.add(floor)
 
@@ -91,15 +158,8 @@ scene.add(floor)
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
 scene.add(ambientLight)
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2)
-directionalLight.castShadow = true
-directionalLight.shadow.mapSize.set(1024, 1024)
-directionalLight.shadow.camera.far = 15
-directionalLight.shadow.camera.left = - 7
-directionalLight.shadow.camera.top = 7
-directionalLight.shadow.camera.right = 7
-directionalLight.shadow.camera.bottom = - 7
-directionalLight.position.set(5, 5, 5)
+const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.1)
+directionalLight.position.set(5, 5, 3)
 scene.add(directionalLight)
 
 /**
@@ -129,11 +189,12 @@ window.addEventListener('resize', () => {
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(- 3, 3, 3)
+camera.position.set(0, 3, 2)
 scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
+controls.maxPolarAngle = Math.PI / 3;
 controls.enableDamping = true
 
 /**
@@ -142,9 +203,8 @@ controls.enableDamping = true
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-renderer.shadowMap.enabled = true
-renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
+renderer.setClearColor('#06070E')
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 /**
@@ -152,8 +212,24 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
+
+// initial displacement 
+let p0 = vector.create(0, 0.5, 0)
+let v0 = vector.create(0, 0, 0) // starts from rest
+
 const tick = () => {
-    const elapsedTime = clock.getElapsedTime()
+
+    // console.log('initial velocity on Y: ' + v0.getY(),)
+    // console.log('velocity on Y: ' + v0.getY(),)
+    v0 = calc_velo(clock.getDelta(), v0) // current rocket velocity
+
+    // Update Position
+    p0 = calc_rocket_disp(clock.getDelta(), p0, v0)
+    sphere.position.set(p0.getX(), p0.getY(), p0.getZ())
+
+    //Update Velocity Chart
+
+
 
     // Update controls
     controls.update()
