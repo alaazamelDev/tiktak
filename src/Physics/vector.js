@@ -1,3 +1,4 @@
+
 var vector = {
     _x: 0,
     _y: 0,
@@ -135,7 +136,7 @@ var vector = {
       this._z /= val;
     },
   
-    squere: function () {
+    square: function () {
       return this.getLength() * this.getLength();
     },
   
