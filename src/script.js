@@ -1,12 +1,13 @@
 import './style.css'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
-import vector from './Physics/vector'
+import Rocket from './Physics/rocket'
+
 /**
  * Debug
  */
-const gui = new dat.GUI()
+const gui = new dat.GUI({width: 400})
 
 /**
  * Base
@@ -14,119 +15,9 @@ const gui = new dat.GUI()
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
-// const data = {
-//     labels: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
-//     datasets: [{
-//         label: 'My First Dataset',
-//         data: [65, 59, 80, 81, 56, 55, 40],
-//         fill: false,
-//         borderColor: 'rgb(75, 192, 192)',
-//         tension: 0.1
-//     }]
-// };
-
-// // Create Chart to visualize velcoity
-// const chart = new Chart('chart', {
-//     type: 'line',
-//     data: data,
-// })
 
 // Scene
 const scene = new THREE.Scene()
-
-const parameters = {
-    fuelInitialMass: 50000, // fuel mass inside the rocket
-    emptyRocketMass: 20000, // rocket mass when there is no fuel inside it
-    flowPercentage: 1,  // how x percent of fuel is being ejected every sec
-    gravityAcc: 9.8,    // gravitational acceleration to calculate weight
-    exaustVelocity: 500,    // velocity of ejected fuel
-    isEngineRunning: true,
-}
-
-
-// gui.add(parameters, 'engineRunningTime').min(0).max(100).step(0.001).name('engine time')
-gui.add(parameters, 'fuelInitialMass').min(1).max(100000).step(1).name('fuel initial mass')
-gui.add(parameters, 'emptyRocketMass').min(1).max(40000).step(1).name('empty rocket mass')
-gui.add(parameters, 'flowPercentage').min(0).max(100).step(0.0001).name('fuel flow percentage')
-gui.add(parameters, 'gravityAcc').min(0).max(40).step(0.00001).name('gravitational acceleration')
-gui.add(parameters, 'exaustVelocity').min(0).max(5000).step(0.1).name('exaust velocity')
-gui.add(parameters, 'isEngineRunning').name('Engine ON/OFF')
-
-
-/**
- * 
- * @returns total mass of rocket (full of fuel)
- */
-function rocketInitialMass() {
-    return parameters.fuelInitialMass + parameters.emptyRocketMass;
-}
-
-/**
- * Calculate the acceleration of the rocket
- */
-
-function calc_thurst() {
-    // 1% of fuel mass is beiging ejected every second
-    let massFlowRate = - parameters.flowPercentage * parameters.fuelInitialMass * 0.1
-
-    // Thrust Force
-    let thrust = parameters.exaustVelocity * massFlowRate
-    return thrust
-}
-
-function calc_weight() {
-    // Weight Force
-    let weight = parameters.gravityAcc * rocketInitialMass()
-    return weight
-}
-
-function calc_acc() {
-    let thrust = 0;
-    let weight = 0;
-    let acceleration
-
-    // if engine is turned on, add thrust effect
-    if (parameters.isEngineRunning) {
-        thrust = calc_thurst()
-    }
-
-    // calculate weight
-    weight = calc_weight()
-
-    // todo: add rest forces
-    console.log('thrust: ' + thrust)
-
-    acceleration = vector.create(0, (-thrust - weight) / rocketInitialMass(), 0)
-
-    return acceleration
-}
-
-/**
- * 
- * @param {double} deltaTime represents change in time 
- * @param {vector} v0 represents previous velocity vector values
- */
-function calc_velo(deltaTime, v0) {
-    let acceleration = calc_acc()
-
-    // v1 = v0 + acc*dt
-    let velocity = v0.add(vector.create(0, acceleration.multiply(deltaTime).getY(), 0))
-    return velocity
-}
-
-
-/**
- * 
- * @param {double} deltaTime represents change in time
- * @param {vector} p0 represents previous displacement vector values
- * @returns 
- */
-function calc_rocket_disp(deltaTime, p0, velocity) {
-    let disp;   // rocket displacement
-
-    disp = p0.add(vector.create(0, velocity.multiply(deltaTime).getY(), 0))
-    return disp
-}
 
 
 /**
@@ -134,10 +25,10 @@ function calc_rocket_disp(deltaTime, p0, velocity) {
  */
 const sphere = new THREE.Mesh(
     new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshNormalMaterial({ flatShading: true })
+    new THREE.MeshNormalMaterial({flatShading: true})
 )
 sphere.castShadow = true
-sphere.position.y = 0.5
+sphere.position.y = 0
 scene.add(sphere)
 
 /**
@@ -146,10 +37,12 @@ scene.add(sphere)
 const floor = new THREE.Mesh(
     new THREE.PlaneBufferGeometry(10, 10),
     new THREE.MeshStandardMaterial({
-        color: '#29524A'
+        color: '#29524A',
+        side: THREE.DoubleSide
     })
 )
-floor.rotation.x = - Math.PI * 0.5
+floor.position.y = -0.5
+floor.rotation.x = -Math.PI * 0.5
 scene.add(floor)
 
 /**
@@ -180,7 +73,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix()
 
     // Update renderer
-    renderer.setSize(sizes.width, sizes.height)
+    // renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
@@ -188,14 +81,14 @@ window.addEventListener('resize', () => {
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 3, 2)
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 1000)
+camera.position.set(0, 0, 40)
 scene.add(camera)
 
 // Controls
-const controls = new OrbitControls(camera, canvas)
-controls.maxPolarAngle = Math.PI / 3;
-controls.enableDamping = true
+// const controls = new OrbitControls(camera, canvas)
+// controls.maxPolarAngle = Math.PI / 3;
+// controls.enableDamping = true
 
 /**
  * Renderer
@@ -212,27 +105,129 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
+// rocket object instance
+const rocket = new Rocket()
 
-// initial displacement 
-let p0 = vector.create(0, 0.5, 0)
-let v0 = vector.create(0, 0, 0) // starts from rest
+// get inputs
+const rocket_panel = gui.addFolder('Rocket Control Panel')
+rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(600).step(1)
+rocket_panel.add(rocket, 'fuel_mass').name('initial fuel mass in (tons)').min(0).max(2400).step(1)
+rocket_panel.add(rocket, 'thrust').name('initial_thrust').min(1).max(35).step(0.01)    // in a thousand of newtons
+rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(Math.PI * (1 / 6)).max(Math.PI * (5 / 6)).step(0.01)    // in a thousand of newtons
+rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(1).max(20).step(0.01)     // in kg/s
+rocket_panel.add(rocket, 'radius').name('rocket radius').min(1).max(5).step(0.01)
 
+// enable and disable forces
+rocket_panel.add(rocket, 'gravity_enabled').name('Enable Gravity')
+rocket_panel.add(rocket, 'drag_enabled').name('Enable Drag')
+rocket_panel.add(rocket, 'engine_running').name('Run Rocket Engine')
+rocket_panel.open()
+
+
+// rocket calculation outputs
+let outputs = {
+
+    // acceleration
+    accX: rocket.acceleration.getX(),
+    accY: rocket.acceleration.getY(),
+    accZ: rocket.acceleration.getZ(),
+
+    // velocity
+    veloX: rocket.velocity.getX(),
+    veloY: rocket.velocity.getY(),
+    veloZ: rocket.velocity.getZ(),
+
+    // position
+    posX: rocket.position.getX(),
+    posY: rocket.position.getY(),
+    posZ: rocket.position.getZ(),
+
+    gravity: rocket.gravity_acc,
+    thrust: rocket.thrust,
+    mass: rocket.total_mass,
+}
+
+// Show output results in debug ui
+const output_panel = gui.addFolder('Rocket Processing Outputs')
+
+output_panel.add(outputs, 'gravity').name('Universal Gravity').step(0.0001)
+output_panel.add(outputs, 'mass').name('Current Rocket Mass').step(0.01)
+
+const acc_ui = output_panel.addFolder('Acceleration')
+acc_ui.add(outputs, 'accX').name('X').step(0.0001)
+acc_ui.add(outputs, 'accY').name('Y').step(0.0001)
+acc_ui.add(outputs, 'accZ').name('Z').step(0.0001)
+
+const velo_ui = output_panel.addFolder('Velocity')
+velo_ui.add(outputs, 'veloX').name('X').step(0.01)
+velo_ui.add(outputs, 'veloY').name('Y').step(0.01)
+velo_ui.add(outputs, 'veloZ').name('Z').step(0.01)
+
+const pos_ui = output_panel.addFolder('Position')
+pos_ui.add(outputs, 'posX').name('X').step(0.1)
+pos_ui.add(outputs, 'posY').name('Y').step(0.1)
+pos_ui.add(outputs, 'posZ').name('Z').step(0.1)
+
+
+output_panel.open()
+acc_ui.open()
+velo_ui.open()
+pos_ui.open()
+
+
+function updateOutputs() {
+
+    // refresh acceleration
+    outputs.accX = rocket.acceleration.getX()
+    outputs.accY = rocket.acceleration.getY()
+    outputs.accZ = rocket.acceleration.getZ()
+
+    // refresh velocity
+    outputs.veloX = rocket.velocity.getX()
+    outputs.veloY = rocket.velocity.getY()
+    outputs.veloZ = rocket.velocity.getZ()
+
+    // refresh displacement
+    outputs.posX = rocket.position.getX()
+    outputs.posY = rocket.position.getY()
+    outputs.posZ = rocket.position.getZ()
+
+    outputs.gravity = rocket.gravity_acc
+    outputs.thrust = rocket.thrust
+    outputs.mass = rocket.total_mass
+}
+
+let oldElapsedTime = 0
 const tick = () => {
 
-    // console.log('initial velocity on Y: ' + v0.getY(),)
-    // console.log('velocity on Y: ' + v0.getY(),)
-    v0 = calc_velo(clock.getDelta(), v0) // current rocket velocity
+    // delta Time
+    const elapsedTime = clock.getElapsedTime()
 
-    // Update Position
-    p0 = calc_rocket_disp(clock.getDelta(), p0, v0)
-    sphere.position.set(p0.getX(), p0.getY(), p0.getZ())
+    const deltaTime = elapsedTime - oldElapsedTime
+    oldElapsedTime = elapsedTime
 
-    //Update Velocity Chart
+    rocket.deltaTime = deltaTime
 
+
+    sphere.position.set(
+        rocket.position.getX(),
+        rocket.position.getY() * 0.1,
+        rocket.position.getZ()
+    )
+
+    camera.position.set(sphere.position.x, sphere.position.y, sphere.position.z - 10)
+    camera.lookAt(sphere.position)
+
+    rocket.update()
+
+    updateOutputs()
+
+    // refresh debug ui
+    output_panel.updateDisplay()
 
 
     // Update controls
-    controls.update()
+    // controls.update()
 
     // Render
     renderer.render(scene, camera)
