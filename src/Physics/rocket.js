@@ -1,41 +1,48 @@
 import vector from "./vector"
+import Environment from "./environment";
+
 export default class Rocket {
 
-    constructor(
-    ) {
+    constructor() {
         this.position = vector.create(0, 0, 0)
         this.velocity = vector.create(0, 0, 0)  // start from rest
         this.acceleration = vector.create(0, 0, 0)  // start from rest
+
+        // for engine properties
+        this.thrust = 17.5    // in a million newtons
+        this.mass_flow_rate = 10    // in kg/s
+        this.nozzle_angle = 0
+
+        this.radius = 3
         this.height = 0
-        this.rocket_mass = 1000
-        this.fuel_mass = 10000  
-        this.total_mass = this.rocket_mass + this.fuel_mass 
+        this.rocket_mass = 200
+        this.fuel_mass = 2400
+        this.total_mass = (this.rocket_mass + this.fuel_mass) * Math.pow(10, 3)
         this.type = 0
 
         // For rocket controlling
         this.engine_running = false
+
         this.drag_enabled = false
         this.gravity_enabled = false
-
         // For debugging purposes
-        this.gravity_acc = 0
-        this.thrust = 0
-        this.weight = 0
-        this.deltaTime = 0.0001
+        this.gravity_acc = 9.81
+        this.environmet = new Environment(0.295)
 
 
-        // depeding on rocket type set the rocket mass flow rate 
-        this.mass_flow_rate = 100
-        this.fuel_exhaust_velocity = 200
+        this.deltaTime = 0.001
+        // depending on rocket type set the rocket mass flow rate
     }
 
     /**
-     * returns the instantinous mass of the rocket
+     * returns the instantaneous mass of the rocket
      */
     update_total_mass() {
         if (this.total_mass > this.rocket_mass) {
-            if (this.engine_running)
-                this.total_mass -= (this.mass_flow_rate * 0.1) // mass is decreasing
+            if (this.engine_running) {
+                this.total_mass -= (this.mass_flow_rate * this.deltaTime) // mass is decreasing
+                // console.log(this.total_mass)
+            }
         } else {
             this.total_mass = this.rocket_mass
         }
@@ -46,15 +53,17 @@ export default class Rocket {
      * @returns thrust force by applying thrust formula
      */
     _thrust_force() {
-        // intitalize thrust vector
+        // initialize thrust vector
         const thrust_vector = vector.create(0, 0, 0)
 
+        if (this.total_mass <= this.rocket_mass) {
+            return thrust_vector
+        }
         // thrust formula : T = Ve * M(dot)
-        const magnitude = this.fuel_exhaust_velocity * this.mass_flow_rate
-        thrust_vector.setY(magnitude)
-        this.thrust = magnitude
+        const thrust_value = this.thrust * Math.pow(10, 6)
+        const exhaust_velo = thrust_value / this.mass_flow_rate
 
-        // console.log('thrust :' + thrust_vector.getLength());
+        thrust_vector.setY(thrust_value)
 
         return thrust_vector
     }
@@ -64,7 +73,7 @@ export default class Rocket {
      */
     _weight_force() {
 
-        // TODO: Simulate takeing it as user input
+        // TODO: Simulate taking it as user input
         //  6.6743 × 10^-11 m^3 kg^-1 s^-2
         const uni_grav_cons = 6.6743 * Math.pow(10, -11)
 
@@ -76,19 +85,32 @@ export default class Rocket {
 
         const distance = earth_radius + this.height
 
+
         // apply formula : Fg= G * (m1 * m2) / R^2
         let weight = vector.create(0, 0, 0)
-        weight.setY(-uni_grav_cons * mass_of_earth * (this.total_mass / Math.pow(distance, 2)))
+        weight.setY(-uni_grav_cons * mass_of_earth * this.total_mass / Math.pow(distance, 2))
 
         // weight.setY(-this.gravity * this.total_mass)
         this.gravity_acc = uni_grav_cons * mass_of_earth / Math.pow(distance, 2)
-        this.weight = weight.getLength()
+
 
         return weight
     }
 
+    calc_center_of_gravity() {
 
-    /** 
+        // rocket load
+        let part1_weight = this.rocket_mass * Math.pow(10, 3) * this.gravity_acc
+        let part2_weight = this.fuel_mass * Math.pow(10, 3) * this.gravity_acc
+
+        console.log('part2: ' + part1_weight + part2_weight)
+
+        //cg = (w1*d + w2*d)/w 
+        return (part1_weight * 9 + part2_weight * 4) / (part1_weight + part2_weight)
+    }
+
+
+    /**
      * @returns calculated rocket acceleration
      * depending on total net forces acting on the rocket
      */
@@ -97,12 +119,14 @@ export default class Rocket {
 
         const thrust = this._thrust_force()
         const weight = this._weight_force()
-        const drag = vector.create(0, 0, 0) // ! Under Construction
+        const reaction = this._weight_force().multiply(-1)
+        const drag = this.environmet.applyDrag(this)
 
         if (this.engine_running) {
             net_forces = net_forces.add(thrust)
         }
 
+        // console.log(this)
         if (this.drag_enabled) {
             net_forces = net_forces.add(drag)
         }
@@ -110,13 +134,13 @@ export default class Rocket {
         if (this.gravity_enabled) {
             net_forces = net_forces.add(weight)
         }
-
+        if (this.height === 0 && this.gravity_enabled) {
+            net_forces = net_forces.add(reaction)
+        }
         // todo: add other forces
 
-        const acc = net_forces.multiply(1 / this.total_mass)
-
-        // console.log(acc);
-        return acc
+        console.log(this.calc_center_of_gravity());
+        return net_forces.multiply(1 / (this.total_mass))
     }
 
     /**
@@ -128,10 +152,10 @@ export default class Rocket {
 
 
     /**
-     * update rocket velocity by adding the accleration
+     * update rocket velocity by adding the acceleration
      */
     _update_velocity() {
-        this.velocity = this.velocity.add(this.acceleration)
+        this.velocity = this.velocity.add(this.acceleration.multiply(this.deltaTime))
     }
 
     /**
@@ -139,13 +163,13 @@ export default class Rocket {
      */
     _update_position() {
 
-        if (this.position.getY() <= 0.5) {
+        if (this.position.getY() <= 0) {
             if (this.velocity.getY() < 0) {
                 this.velocity = this.velocity.multiply(0)
-                this.position.setY(0.5)
+                this.position.setY(0)
             }
         }
-        this.position = this.position.add(this.velocity)
+        this.position = this.position.add(this.velocity.multiply(this.deltaTime))
     }
 
     _update_current_height() {
