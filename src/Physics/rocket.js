@@ -8,17 +8,19 @@ export default class Rocket {
         this.velocity = vector.create(0, 0, 0)  // start from rest
         this.acceleration = vector.create(0, 0, 0)  // start from rest
 
+        this.angle = vector.create(0, 0, 0) // rotation angle of the rocket
+
         // for engine properties
-        this.thrust = 17.5    // in a million newtons
-        this.mass_flow_rate = 10    // in kg/s
+        this.thrust = 13.5    // in a million newtons
+        this.mass_flow_rate = 100    // in kg/s
         this.nozzle_angle = 0
 
         this.radius = 3
         this.height = 0
         this.rocket_mass = 200
-        this.fuel_mass = 2400
+        this.fuel_mass = 1200
         this.total_mass = (this.rocket_mass + this.fuel_mass) * Math.pow(10, 3)
-        this.type = 0
+        this.burnout_time = 0
 
         // For rocket controlling
         this.engine_running = false
@@ -38,13 +40,13 @@ export default class Rocket {
      * returns the instantaneous mass of the rocket
      */
     update_total_mass() {
-        if (this.total_mass > this.rocket_mass) {
+        if (this.total_mass > this.rocket_mass * Math.pow(10, 3)) {
             if (this.engine_running) {
-                this.total_mass -= (this.mass_flow_rate * this.deltaTime) // mass is decreasing
+                this.total_mass -= (this.mass_flow_rate) // mass is decreasing
                 // console.log(this.total_mass)
             }
         } else {
-            this.total_mass = this.rocket_mass
+            this.total_mass = this.rocket_mass * Math.pow(10, 3)
         }
     }
 
@@ -54,17 +56,19 @@ export default class Rocket {
      */
     _thrust_force() {
         // initialize thrust vector
-        const thrust_vector = vector.create(0, 0, 0)
+        let thrust_vector = vector.create(0, 0, 0)
 
-        if (this.total_mass <= this.rocket_mass) {
+        if (this.total_mass <= this.rocket_mass * Math.pow(10, 3)) {
             return thrust_vector
         }
         // thrust formula : T = Ve * M(dot)
         const thrust_value = this.thrust * Math.pow(10, 6)
-        const exhaust_velo = thrust_value / this.mass_flow_rate
+        // const exhaust_velo = thrust_value / this.mass_flow_rate
 
-        thrust_vector.setY(thrust_value)
+        thrust_vector.setX(thrust_value * Math.cos(this.nozzle_angle + (Math.PI / 2)))
+        thrust_vector.setY(thrust_value * Math.sin(this.nozzle_angle + (Math.PI / 2)))
 
+        // console.log(thrust_vector)
         return thrust_vector
     }
 
@@ -88,7 +92,7 @@ export default class Rocket {
 
         // apply formula : Fg= G * (m1 * m2) / R^2
         let weight = vector.create(0, 0, 0)
-        weight.setY(-uni_grav_cons * mass_of_earth * this.total_mass / Math.pow(distance, 2))
+        weight.setY(-uni_grav_cons * mass_of_earth * (this.total_mass) / Math.pow(distance, 2))
 
         // weight.setY(-this.gravity * this.total_mass)
         this.gravity_acc = uni_grav_cons * mass_of_earth / Math.pow(distance, 2)
@@ -109,6 +113,10 @@ export default class Rocket {
         return (part1_weight * 9 + part2_weight * 4) / (part1_weight + part2_weight)
     }
 
+    calc_total_torques() {
+        // ! resource to calc moment of inertia https://shorturl.at/jpsGJ
+
+    }
 
     /**
      * @returns calculated rocket acceleration
@@ -126,7 +134,7 @@ export default class Rocket {
             net_forces = net_forces.add(thrust)
         }
 
-        // console.log(this)
+        // console.log(drag)
         if (this.drag_enabled) {
             net_forces = net_forces.add(drag)
         }
@@ -139,7 +147,7 @@ export default class Rocket {
         }
         // todo: add other forces
 
-        console.log(this.calc_center_of_gravity());
+        console.log(net_forces);
         return net_forces.multiply(1 / (this.total_mass))
     }
 
@@ -182,6 +190,10 @@ export default class Rocket {
         this._update_position()
         this.update_total_mass()
         this._update_current_height()
+
+        if (this.engine_running) {
+            this.burnout_time += this.deltaTime
+        }
     }
 
 }
