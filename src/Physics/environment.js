@@ -1,4 +1,7 @@
+
 export default class Environment {
+
+
     constructor(drag_coefficient) {
         this.drag_coefficient = drag_coefficient
     }
@@ -6,13 +9,15 @@ export default class Environment {
 
     calc_temp(height) {
         if (height > 25000) {
+            console.log('height: ' + height)
             return -131.21 + 0.00299 * height
         } else if (height >= 11000 && height <= 25000) {
-            return -56.46
+            // console.log('height: ' + height)
+            return -56
         } else if (height < 11000) {
+            // console.log('height: ' + height)
             return 15.04 - 0.00649 * height
         }
-
     }
 
     calc_pressure(height, temp, gravity) {

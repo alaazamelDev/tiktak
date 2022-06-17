@@ -607,11 +607,11 @@ const rocket = new Rocket()
 
 // get inputs
 const rocket_panel = gui.addFolder('Rocket Control Panel')
-rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(600).step(1)
-rocket_panel.add(rocket, 'fuel_mass').name('initial fuel mass in (tons)').min(0).max(2400).step(1)
-rocket_panel.add(rocket, 'thrust').name('initial_thrust').min(1).max(35).step(0.01) // in a thousand of newtons
-rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(Math.PI * (1 / 6)).max(Math.PI * (5 / 6)).step(0.01) // in a thousand of newtons
-rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(1).max(20).step(0.01) // in kg/s
+rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(1000).step(1)
+rocket_panel.add(rocket, 'fuel_mass').name('initial fuel mass in (tons)').min(0).max(2000).step(1)
+rocket_panel.add(rocket, 'thrust').name('thrust').min(1).max(35).step(0.001)    // in a thousand of newtons
+rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(-Math.PI * (1 / 6)).max(Math.PI * (1 / 6)).step(0.001)    // in a thousand of newtons
+rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(10).max(500).step(1)     // in kg/s
 rocket_panel.add(rocket, 'radius').name('rocket radius').min(1).max(5).step(0.01)
 
 // enable and disable forces
@@ -642,6 +642,7 @@ let outputs = {
     gravity: rocket.gravity_acc,
     thrust: rocket.thrust,
     mass: rocket.total_mass,
+    burnout_time: rocket.burnout_time,
 }
 
 // Show output results in debug ui
@@ -649,6 +650,7 @@ const output_panel = gui.addFolder('Rocket Processing Outputs')
 
 output_panel.add(outputs, 'gravity').name('Universal Gravity').step(0.0001)
 output_panel.add(outputs, 'mass').name('Current Rocket Mass').step(0.01)
+output_panel.add(outputs, 'burnout_time').name('Engine running time').step(0.01)
 
 const acc_ui = output_panel.addFolder('Acceleration')
 acc_ui.add(outputs, 'accX').name('X').step(0.0001)
@@ -692,6 +694,7 @@ function updateOutputs() {
     outputs.gravity = rocket.gravity_acc
     outputs.thrust = rocket.thrust
     outputs.mass = rocket.total_mass
+    outputs.burnout_time = rocket.burnout_time
 }
 
 let oldElapsedTime = 0
@@ -706,14 +709,16 @@ const tick = () => {
     rocket.deltaTime = deltaTime
 
 
+
     rocket2.position.set(
-        rocket.position.getX(),
+        rocket.position.getX() * 0.05,
         rocket.position.getY() * 0.05,
-        rocket.position.getZ()
+        rocket.position.getZ() * 0.05
     )
 
-    camera.position.set(rocket2.position.x, rocket2.position.y + 10, rocket2.position.z - 40)
+    camera.position.set(rocket2.position.x, rocket2.position.y + 10, rocket2.position.z - 30)
     camera.lookAt(rocket2.position)
+
 
     rocket.update()
 
