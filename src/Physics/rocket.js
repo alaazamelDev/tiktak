@@ -8,17 +8,22 @@ export default class Rocket {
         this.velocity = vector.create(0, 0, 0)  // start from rest
         this.acceleration = vector.create(0, 0, 0)  // start from rest
 
-        this.angle = vector.create(0, 0, 0) // rotation angle of the rocket
+        this.rocket_length = 10
+        this.drag = vector.create(0, 0, 0)  // drag vector
+
+        this.ang_acc = 0
+        this.ang_velo = 0
+        this.ang = 0
 
         // for engine properties
-        this.thrust = 13.5    // in a million newtons
-        this.mass_flow_rate = 100    // in kg/s
+        this.thrust = 9.5    // in a million newtons
+        this.mass_flow_rate = 30    // in kg/s
         this.nozzle_angle = 0
 
         this.radius = 3
         this.height = 0
-        this.rocket_mass = 200
-        this.fuel_mass = 1200
+        this.rocket_mass = 150
+        this.fuel_mass = 700
         this.total_mass = (this.rocket_mass + this.fuel_mass) * Math.pow(10, 3)
         this.burnout_time = 0
 
@@ -40,14 +45,19 @@ export default class Rocket {
      * returns the instantaneous mass of the rocket
      */
     update_total_mass() {
-        if (this.total_mass > this.rocket_mass * Math.pow(10, 3)) {
+        if (this.total_mass > (this.rocket_mass * Math.pow(10, 3))) {
             if (this.engine_running) {
-                this.total_mass -= (this.mass_flow_rate) // mass is decreasing
+                this.total_mass -= (this.mass_flow_rate * this.deltaTime) // mass is decreasing
                 // console.log(this.total_mass)
             }
+            // else {
+            //     this.total_mass = (this.rocket_mass + this.fuel_mass) * Math.pow(10, 3)
+            //     // console.log(this.total_mass)
+            // }
         } else {
             this.total_mass = this.rocket_mass * Math.pow(10, 3)
         }
+        return this.total_mass
     }
 
 
@@ -101,22 +111,120 @@ export default class Rocket {
         return weight
     }
 
+
     calc_center_of_gravity() {
 
         // rocket load
         let part1_weight = this.rocket_mass * Math.pow(10, 3) * this.gravity_acc
-        let part2_weight = this.fuel_mass * Math.pow(10, 3) * this.gravity_acc
+        let part2_weight = (this.update_total_mass() - this.rocket_mass * Math.pow(10, 3)) * this.gravity_acc
 
-        console.log('part2: ' + part1_weight + part2_weight)
+        // console.log('part1: ' + part1_weight)
+        // console.log('part2: ' + part2_weight)
 
-        //cg = (w1*d + w2*d)/w 
-        return (part1_weight * 9 + part2_weight * 4) / (part1_weight + part2_weight)
+        //cg = (w1*d + w2*d)/w
+        return (part1_weight * 9 + part2_weight * 4) / (this.update_total_mass() * this.gravity_acc)
+    }
+
+    // calc_center_of_pressure() {
+    //
+    //     // rocket load
+    //     // triangle area , 0.6 must be a percent of all length
+    //     const part1_area = this.radius * 2 + 0.6 * 0.5
+    //     // rectangle area (BODY) , 11.4 must be a percent of all length
+    //     const part2_area = this.radius * 2 * 11.4
+    //     // trapezoid area , (A+B) / 2 * h , 0.6 & 1.2 must be a percent of all width , 1 must be a percent of all length
+    //     const part3_area = (0.6 + 1.2) / 2
+    //
+    //     const all_parts_area = part1_area + part2_area + part3_area
+    //
+    //     // triangle centroid , 0.6 must be a percent of all length
+    //     const part1_centriod = 2 / 3 * 0.6
+    //     // rectangle centroid (BODY) , 11.4 must be a percent of all length
+    //     const part2_centroid = 11.4 / 2
+    //     // trapezoid centroid , h/3 * (2A+B / A+B ) , 0.6 & 1.2 must be a percent of all width , 1 must be a percent of all length
+    //     const part3_centroid = 1 / 3 * ((2 * 0.6 + 1.2) / (0.6 + 1.2))
+    //
+    //     const part1_distance = part1_centriod + part2_centroid + part3_centroid
+    //     const part2_distance = part2_centroid + part3_centroid
+    //     const part3_distance = part3_centroid
+    //
+    //     //Cp = (a1*d + a2*d)/a
+    //     return (part1_area * part1_distance + part2_area * part2_distance + part3_area * part3_distance) / all_parts_area
+    // }
+
+    calc_center_of_pressure() {
+
+        // rocket load
+        // triangle area , 0.6 must be a percent of all length
+        const part1_area = this.radius * 2
+        // rectangle area (BODY) , 11.4 must be a percent of all length
+        const part2_area = this.radius * 8
+        // trapezoid area , (A+B) / 2 * h , 0.6 & 1.2 must be a percent of all width , 1 must be a percent of all length
+        // const part3_area = (0.6 + 1.2) / 2
+
+        const all_parts_area = part1_area + part2_area
+
+        // triangle centroid , 0.6 must be a percent of all length
+        const part1_centriod = 2 / 2
+        // rectangle centroid (BODY) , 11.4 must be a percent of all length
+        const part2_centroid = 8 / 2
+        // trapezoid centroid , h/3 * (2A+B / A+B ) , 0.6 & 1.2 must be a percent of all width , 1 must be a percent of all length
+        // const part3_centroid = 1 / 3 * ((2 * 0.6 + 1.2) / (0.6 + 1.2))
+
+        const part1_distance = part1_centriod + part2_centroid
+        // const part2_distance = part2_centroid
+        // const part3_distance = part3_centroid
+
+        //Cp = (a1*d + a2*d)/a
+        return (part1_area * part1_distance + part2_area * part2_centroid) / all_parts_area
     }
 
     calc_total_torques() {
-        // ! resource to calc moment of inertia https://shorturl.at/jpsGJ
+        const cog = this.calc_center_of_gravity()
+        const cop = this.calc_center_of_pressure()
+
+        // console.log('cog: ' + cog)
+        // console.log('cop: ' + cop)
+
+        const diameter = cog - cop
+
+        // torque caused by drag
+        let drag_torque = this.drag.multiply(diameter)
+
+        // lift is the force which is in the opposite direction of the force which cause the torque
+        let lift_torque = this.drag.multiply(-diameter)
+        lift_torque.setAngleXY(this.drag.getAngleXY() + (Math.PI / 2))
+
+        // calc total torques
+        let total_torques = vector.create(0, 0, 0)
+        total_torques = total_torques
+            .add(drag_torque)
+            .add(lift_torque)
+
+        console.log('drag Angle: ' + (this.drag.getAngleXY() + (Math.PI / 2)))
+
+        return total_torques
+    }
+
+    calc_moment_of_inertia() {
+        return 0.5 * this.total_mass * Math.pow(this.calc_center_of_gravity() - this.calc_center_of_pressure(), 2)
 
     }
+
+    calc_ang_acc() {
+        this.ang_acc = this.calc_total_torques().getLength() / this.calc_moment_of_inertia()
+    }
+
+    calc_ang_velo() {
+        const ang_acc = this.ang_acc
+        this.ang_velo += ang_acc * this.deltaTime
+    }
+
+    calc_ang() {
+        const ang_velo = this.ang_velo
+        this.ang += ang_velo * this.deltaTime
+    }
+
 
     /**
      * @returns calculated rocket acceleration
@@ -128,7 +236,7 @@ export default class Rocket {
         const thrust = this._thrust_force()
         const weight = this._weight_force()
         const reaction = this._weight_force().multiply(-1)
-        const drag = this.environmet.applyDrag(this)
+        this.drag = this.environmet.applyDrag(this)
 
         if (this.engine_running) {
             net_forces = net_forces.add(thrust)
@@ -136,7 +244,7 @@ export default class Rocket {
 
         // console.log(drag)
         if (this.drag_enabled) {
-            net_forces = net_forces.add(drag)
+            net_forces = net_forces.add(this.drag)
         }
 
         if (this.gravity_enabled) {
@@ -147,7 +255,7 @@ export default class Rocket {
         }
         // todo: add other forces
 
-        console.log(net_forces);
+        // console.log(net_forces);
         return net_forces.multiply(1 / (this.total_mass))
     }
 
@@ -190,6 +298,14 @@ export default class Rocket {
         this._update_position()
         this.update_total_mass()
         this._update_current_height()
+
+        this.calc_ang_acc()
+        this.calc_ang_velo()
+        this.calc_ang()
+
+        console.log(' ang_acc: ' + this.ang_acc)
+        console.log(' ang_velo: ' + this.ang_velo)
+        console.log(' ang: ' + this.ang)
 
         if (this.engine_running) {
             this.burnout_time += this.deltaTime

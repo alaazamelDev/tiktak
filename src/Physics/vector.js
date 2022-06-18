@@ -45,7 +45,7 @@ var vector = {
         var length = this.getLength();
         this._x = Math.cos(angleXZ) * length; // alpha
         this._y = Math.cos(angleXY) * length; // Beta
-        this._z = Math.cos(angelZY) * length; //gamma
+        this._z = Math.cos(angelZY) * length; // gamma
     },
 
     inits: function (length, angleXY, angleXZ) {

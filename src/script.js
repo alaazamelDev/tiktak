@@ -1,48 +1,42 @@
 import './style.css'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import Rocket from './Physics/rocket'
 
 /**
  * Debug
  */
-const gui = new dat.GUI({ width: 400 })
+const gui = new dat.GUI({width: 400})
 
 let up = 4;
 let radius = 1.5;
 const rocket2 = new THREE.Group()
+let rotation = 0;
 
 /**
  * Base
  */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
-window.addEventListener("load", init, false);
+// window.addEventListener("load", init, false);
 
 
 // Scene
 const scene = new THREE.Scene()
 const textureLoader = new THREE.TextureLoader()
 
-function init() {
-    createScene();
-    // createRocket1();
-    createRocket2();
-    createLaunch();
-
-}
 
 /**
  * Test sphere
  */
 const sphere = new THREE.Mesh(
     new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshNormalMaterial({ flatShading: true })
+    new THREE.MeshNormalMaterial({flatShading: true})
 )
 sphere.castShadow = true
 sphere.position.y = 0
-    //scene.add(sphere)
+//scene.add(sphere)
 
 /**
  * Floor
@@ -57,7 +51,6 @@ scene.add(ambientLight)
 const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.1)
 directionalLight.position.set(5, 5, 3)
 scene.add(directionalLight)
-
 
 
 const createScene = () => {
@@ -76,19 +69,19 @@ const createScene = () => {
     const environmet6Texture = textureLoader.load('/textures/environment/meadow_lf.jpg')
     const earthTexture = textureLoader.load('/textures/environment/earth.jpg')
 
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet1Texture }));
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet2Texture }));
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet4Texture }));
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet5Texture }));
-    materialArray.push(new THREE.MeshBasicMaterial({ map: environmet6Texture }));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet1Texture}));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet2Texture}));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet4Texture}));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet5Texture}));
+    materialArray.push(new THREE.MeshBasicMaterial({map: environmet6Texture}));
 
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
-    materialArray1.push(new THREE.MeshBasicMaterial({ map: environmet3Texture }));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
+    materialArray1.push(new THREE.MeshBasicMaterial({map: environmet3Texture}));
 
 
     for (let i = 0; i < 6; i++)
@@ -96,7 +89,6 @@ const createScene = () => {
     let skyboxGeo = new THREE.BoxGeometry(820, 120, 850);
     let skybox = new THREE.Mesh(skyboxGeo, materialArray);
     skybox.position.y = 57;
-
 
 
     for (let i = 0; i < 6; i++)
@@ -145,10 +137,11 @@ const createRocket1 = () => {
 
     // Group
     const rocket = new THREE.Group()
+    rocket.rotateY(Math.PI / 2)
     scene.add(rocket)
 
     const launchCylinder1 = new THREE.Mesh(new THREE.CylinderBufferGeometry(1, 1, 0.2, 50),
-        new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+        new THREE.MeshBasicMaterial({color: 0xff0000}));
 
     const launchCylinder2 = new THREE.Mesh(new THREE.CylinderBufferGeometry(1.25, 1.25, 0.4, 50),
         new THREE.MeshStandardMaterial({
@@ -157,7 +150,6 @@ const createRocket1 = () => {
             metalnessMap: rocket1MetrialTexture,
             metalness: 0.1,
             aoMap: rocket1AmbientTexture,
-
             roughnessMap: rocket1roughnessTexture,
             roughness: 32,
             opacity: rocket1opacityTexture,
@@ -170,7 +162,6 @@ const createRocket1 = () => {
     const bodyCylinder1 = new THREE.Mesh(new THREE.CylinderBufferGeometry(radius, radius, 5, 50),
         new THREE.MeshStandardMaterial({
             map: rocket1ColorTexture,
-            aoMap: rocket1AmbientTexture,
             normalMap: rocket1NormalTexture,
             metalnessMap: rocket1MetrialTexture,
             metalness: 0.1,
@@ -298,12 +289,12 @@ const createRocket1 = () => {
 
 const createRocket2 = () => {
 
-    const rocket2MetrialTexture = textureLoader.load('static/textures/rocket/bodyRocket2/Material.jpg');
+    // const rocket2MetrialTexture = textureLoader.load('static/textures/rocket/bodyRocket2/Material.jpg');
     const rocket2ColorTexture = textureLoader.load('/textures/rocket/bodyRocket2/Plastic_basecolor.jpg');
     const rocket2AmbientTexture = textureLoader.load('/textures/rocket/bodyRocket2/Plastic_ambientOcclusion.jpg');
     const rocket2NormalTexture = textureLoader.load('/textures/rocket/bodyRocket2/Plastic_normal.jpg');
     const rocket2roughnessTexture = textureLoader.load('/textures/rocket/bodyRocket2/Plastic_roughness.jpg');
-    const rollMetrialTexture = textureLoader.load('static/textures/rocket/bodyRocket2/Material_roll.jpg');
+    // const rollMetrialTexture = textureLoader.load('static/textures/rocket/bodyRocket2/Material_roll.jpg');
     const rollColorTexture = textureLoader.load('/textures/rocket/bodyRocket2/Metal_basecolor.jpg');
     const rollAmbientTexture = textureLoader.load('/textures/rocket/bodyRocket2/Metal_ambientOcclusion.jpg');
     const rollNormalTexture = textureLoader.load('/textures/rocket/bodyRocket2/Metal_normal.jpg');
@@ -317,8 +308,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
-            metalnessMap: rollMetrialTexture,
-            metalness: 1.1,
+            // metalnessMap: rollMetrialTexture,
+            // metalness: 1.1,
             aoMap: rollAmbientTexture,
             roughnessMap: rollroughnessTexture,
             roughness: 32,
@@ -330,8 +321,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -343,8 +334,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
-            metalnessMap: rollMetrialTexture,
-            metalness: 1.1,
+            // metalnessMap: rollMetrialTexture,
+            // metalness: 1.1,
             aoMap: rollAmbientTexture,
             roughnessMap: rollroughnessTexture,
             roughness: 32,
@@ -356,8 +347,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -369,8 +360,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
-            metalnessMap: rollMetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rollMetrialTexture,
+            // metalness: 0.1,
             aoMap: rollAmbientTexture,
             roughnessMap: rollroughnessTexture,
             roughness: 32,
@@ -383,8 +374,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -395,8 +386,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
-            metalnessMap: rollMetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rollMetrialTexture,
+            // metalness: 0.1,
             aoMap: rollAmbientTexture,
             roughnessMap: rollroughnessTexture,
             roughness: 32,
@@ -408,8 +399,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -419,8 +410,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -431,8 +422,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -442,8 +433,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -453,8 +444,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -464,8 +455,8 @@ const createRocket2 = () => {
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
-            metalnessMap: rocket2MetrialTexture,
-            metalness: 0.1,
+            // metalnessMap: rocket2MetrialTexture,
+            // metalness: 0.1,
             aoMap: rocket2AmbientTexture,
             roughnessMap: rocket2roughnessTexture,
             roughness: 32,
@@ -550,6 +541,16 @@ const createLaunch = () => {
 
 }
 
+function init() {
+    createScene();
+    // createRocket1();
+    createRocket2();
+    createLaunch();
+
+}
+
+init()
+
 /**
  * Sizes
  */
@@ -607,10 +608,38 @@ const rocket = new Rocket()
 
 // get inputs
 const rocket_panel = gui.addFolder('Rocket Control Panel')
-rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(1000).step(1)
-rocket_panel.add(rocket, 'fuel_mass').name('initial fuel mass in (tons)').min(0).max(2000).step(1)
-rocket_panel.add(rocket, 'thrust').name('thrust').min(1).max(35).step(0.001)    // in a thousand of newtons
-rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(-Math.PI * (1 / 6)).max(Math.PI * (1 / 6)).step(0.001)    // in a thousand of newtons
+rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(300).step(1)
+rocket_panel.add(rocket, 'fuel_mass')
+    .name('initial fuel mass in (tons)')
+    .min(0)
+    .max(1000).step(1)
+    .onFinishChange(() => {
+        rocket.total_mass = (rocket.rocket_mass + rocket.fuel_mass) * Math.pow(10, 3)
+    })
+rocket_panel.add(rocket, 'thrust')
+    .name('thrust')
+    .min(1)
+    .max(35)
+    .step(0.001)
+    .onFinishChange(() => {
+        rocket.total_mass = (rocket.rocket_mass + rocket.fuel_mass) * Math.pow(10, 3)
+    })// in a thousand of newtons
+//
+// rocket_panel.add(rocket, 'nozzle_angle')
+//     .name('nozzle angle (ZY)')
+//     .min(-Math.PI * (1 / 6))
+//     .max(Math.PI * (1 / 6))
+//     .step(0.001)
+//     .onFinishChange(() => {
+//
+//     })
+
+rocket_panel.add(rocket, 'nozzle_angle')
+    .name('nozzle angle (XY)')
+    .min(-Math.PI * (1 / 6))
+    .max(Math.PI * (1 / 6))
+    .step(0.001)
+
 rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(10).max(500).step(1)     // in kg/s
 rocket_panel.add(rocket, 'radius').name('rocket radius').min(1).max(5).step(0.01)
 
@@ -698,25 +727,37 @@ function updateOutputs() {
 }
 
 let oldElapsedTime = 0
+let currentAngle = 0
 const tick = () => {
+
 
     // delta Time
     const elapsedTime = clock.getElapsedTime()
+
 
     const deltaTime = elapsedTime - oldElapsedTime
     oldElapsedTime = elapsedTime
 
     rocket.deltaTime = deltaTime
 
+    // if (currentAngle !== (rocket.nozzle_angle))
+    //     currentAngle += rocket.nozzle_angle * deltaTime * 0.1
+    //
+    // rocket2.rotation.z = currentAngle * 0.06
 
+    // currentAngle += (rocket.nozzle_angle * deltaTime)
+    // rocket.nozzle_angle -= rocket.nozzle_angle * deltaTime
 
     rocket2.position.set(
-        rocket.position.getX() * 0.05,
-        rocket.position.getY() * 0.05,
-        rocket.position.getZ() * 0.05
+        rocket.position.getX() * 0.06,
+        rocket.position.getY() * 0.06,
+        rocket.position.getZ() * 0.06
     )
 
-    camera.position.set(rocket2.position.x, rocket2.position.y + 10, rocket2.position.z - 30)
+    // rocket2.rotateZ(rocket.ang)
+    camera.position.set(
+        rocket2.position.x,
+        rocket2.position.y + 10, rocket2.position.z - 30)
     camera.lookAt(rocket2.position)
 
 
