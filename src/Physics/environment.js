@@ -1,4 +1,3 @@
-
 export default class Environment {
 
 
@@ -37,8 +36,8 @@ export default class Environment {
     }
 
     applyDrag(rocket) {
-        let temp = this.calc_temp(rocket.height)
-        let pressure = this.calc_pressure(rocket.height, temp, rocket.gravity_acc)
+        let temp = this.calc_temp(rocket.height * 0.1)
+        let pressure = this.calc_pressure(rocket.height * 0.1, temp, rocket.gravity_acc)
         let density = this.calc_density(pressure, temp)
         let sqrvelo = rocket.velocity.square()
         let area = this.calc_area(rocket.radius)

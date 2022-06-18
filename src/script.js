@@ -10,6 +10,7 @@ import Rocket from './Physics/rocket'
 const gui = new dat.GUI({ width: 400 })
 
 let up = 4;
+let h = 5;
 let radius = 1.5;
 const rocket2 = new THREE.Group()
 
@@ -32,22 +33,6 @@ function init() {
     createLaunch();
 
 }
-
-/**
- * Test sphere
- */
-const sphere = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshNormalMaterial({ flatShading: true })
-)
-sphere.castShadow = true
-sphere.position.y = 0
-    //scene.add(sphere)
-
-/**
- * Floor
- */
-
 /**
  * Lights
  */
@@ -313,7 +298,7 @@ const createRocket2 = () => {
 
 
     const baseColumn1 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 0.9, radius - 0.3, 1, 50),
+        new THREE.CylinderGeometry(radius - 0.9, radius - 0.3, h - 4, 50),
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
@@ -326,7 +311,7 @@ const createRocket2 = () => {
         }));
 
     const body1 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius, 5, 50),
+        new THREE.CylinderGeometry(radius, radius, h, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -339,7 +324,7 @@ const createRocket2 = () => {
         }));
 
     const roll1 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius, 0.5, 50),
+        new THREE.CylinderGeometry(radius, radius, h - 4.5, 50),
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
@@ -352,7 +337,7 @@ const createRocket2 = () => {
         }));
 
     const body2 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius, 3, 50),
+        new THREE.CylinderGeometry(radius, radius, h - 2, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -365,7 +350,7 @@ const createRocket2 = () => {
         }));
 
     const roll2 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius, 0.5, 50),
+        new THREE.CylinderGeometry(radius, radius, h - 4.5, 50),
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
@@ -379,7 +364,7 @@ const createRocket2 = () => {
         }));
 
     const body3 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 0.4, radius, 1.2, 50),
+        new THREE.CylinderGeometry(radius - 0.4, radius, h - 3.8, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -391,7 +376,7 @@ const createRocket2 = () => {
         }));
 
     const roll3 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 0.6, radius - 0.33, 0.5, 50),
+        new THREE.CylinderGeometry(radius - 0.6, radius - 0.33, h - 4.5, 50),
         new THREE.MeshStandardMaterial({
             map: rollColorTexture,
             normalMap: rollNormalTexture,
@@ -404,7 +389,7 @@ const createRocket2 = () => {
 
 
     const body4 = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 1.1, radius - 0.6, 0.7, 50),
+        new THREE.CylinderGeometry(radius - 1.1, radius - 0.6, h - 4.3, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -415,7 +400,7 @@ const createRocket2 = () => {
             roughness: 32,
         }));
     const header = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.01, radius - 1, 0.6, 50),
+        new THREE.CylinderGeometry(0.01, radius - 1, h - 4.4, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -449,7 +434,7 @@ const createRocket2 = () => {
             roughness: 32,
         }));
     const engineRight = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 1.1, radius - 0.9, 2, 50),
+        new THREE.CylinderGeometry(radius - 1.1, radius - 0.9, h - 3, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -460,7 +445,7 @@ const createRocket2 = () => {
             roughness: 32,
         }));
     const engineLeft = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius - 1.1, radius - 0.9, 2, 50),
+        new THREE.CylinderGeometry(radius - 1.1, radius - 0.9, h - 3, 50),
         new THREE.MeshStandardMaterial({
             map: rocket2ColorTexture,
             normalMap: rocket2NormalTexture,
@@ -506,18 +491,10 @@ const createRocket2 = () => {
     rocket2.add(engineLeft);
     rocket2.add(engineRight);
     rocket2.position.y = 0;
-    window.addEventListener('keypress', (event) => {
-        switch (event.key) {
-            case 'w':
-                rocket2.position.y += 3;
-                break;
-            case 's':
-                rocket2.position.y--;
-                break;
 
-        }
-    })
+
 }
+
 
 const createLaunch = () => {
 
@@ -609,9 +586,9 @@ const rocket = new Rocket()
 const rocket_panel = gui.addFolder('Rocket Control Panel')
 rocket_panel.add(rocket, 'rocket_mass').name('empty rocket mass in (tons)').min(1).max(1000).step(1)
 rocket_panel.add(rocket, 'fuel_mass').name('initial fuel mass in (tons)').min(0).max(2000).step(1)
-rocket_panel.add(rocket, 'thrust').name('thrust').min(1).max(35).step(0.001)    // in a thousand of newtons
-rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(-Math.PI * (1 / 6)).max(Math.PI * (1 / 6)).step(0.001)    // in a thousand of newtons
-rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(10).max(500).step(1)     // in kg/s
+rocket_panel.add(rocket, 'thrust').name('thrust').min(1).max(35).step(0.001) // in a thousand of newtons
+rocket_panel.add(rocket, 'nozzle_angle').name('nozzle angle').min(-Math.PI * (1 / 6)).max(Math.PI * (1 / 6)).step(0.001) // in a thousand of newtons
+rocket_panel.add(rocket, 'mass_flow_rate').name('mass flow rate').min(10).max(500).step(1) // in kg/s
 rocket_panel.add(rocket, 'radius').name('rocket radius').min(1).max(5).step(0.01)
 
 // enable and disable forces
@@ -711,12 +688,12 @@ const tick = () => {
 
 
     rocket2.position.set(
-        rocket.position.getX() * 0.05,
-        rocket.position.getY() * 0.05,
-        rocket.position.getZ() * 0.05
-    )
-
-    camera.position.set(rocket2.position.x, rocket2.position.y + 10, rocket2.position.z - 30)
+            rocket.position.getX() * 0.05,
+            rocket.position.getY() * 0.05,
+            rocket.position.getZ() * 0.05
+        )
+        // rocket2.rotateY(12)
+    camera.position.set(rocket2.position.x + 30, rocket2.position.y + 10, rocket2.position.z - 20)
     camera.lookAt(rocket2.position)
 
 
