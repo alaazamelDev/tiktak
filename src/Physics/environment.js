@@ -39,8 +39,8 @@ export default class Environment {
     }
 
     applyDrag(rocket) {
-        let temp = this.calc_temp(rocket.height * 0.01)
-        let pressure = this.calc_pressure(rocket.height * 0.01, temp, rocket.gravity_acc)
+        let temp = this.calc_temp(rocket.height)
+        let pressure = this.calc_pressure(rocket.height /** 0.01*/, temp, rocket.gravity_acc)
         let density = this.calc_density(pressure, temp)
         let sqrvelo = rocket.velocity.square()
         // console.log(sqrvelo)
@@ -49,4 +49,16 @@ export default class Environment {
         let drag = -0.5 * sqrvelo * density * area * this.drag_coefficient
         return velo_unit.multiply(drag)
     }
+
+    applyLift(rocket) {
+        let temp = this.calc_temp(rocket.height)
+        let pressure = this.calc_pressure(rocket.height /** 0.01*/, temp, rocket.gravity_acc)
+        let density = this.calc_density(pressure, temp)
+        let sqrvelo = rocket.velocity.square()
+        // console.log(sqrvelo)
+        let area = this.calc_area(rocket.radius)
+
+        return 0.5 * density * sqrvelo * area
+    }
+
 }

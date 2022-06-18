@@ -1,5 +1,7 @@
 import vector from "./vector"
 import Environment from "./environment";
+import * as THREE from 'three'
+
 
 export default class Rocket {
 
@@ -60,6 +62,15 @@ export default class Rocket {
         return this.total_mass
     }
 
+    calc_lift_force(angle) {
+
+        const lift = this.environmet.applyLift(this)
+        return vector.create(
+            -lift * Math.cos(angle),
+            lift * Math.sin(angle),
+            0
+        )
+    }
 
     /**
      * @returns thrust force by applying thrust formula
@@ -189,20 +200,45 @@ export default class Rocket {
         const diameter = cog - cop
 
         // torque caused by drag
-        let drag_torque = this.drag.multiply(diameter)
+        const positionVector = new THREE.Vector3(
+            this.position.x,
+            this.position.y,
+            this.position.z
+        )
+
+        const velocityVector = new THREE.Vector3(
+            this.velocity.x,
+            this.velocity.y,
+            this.velocity.z
+        )
+
+        // angle between position vector and velocity vector
+        const alpha = positionVector.angleTo(velocityVector)
+
+        // angle between velocity vector and x axis
+        const gama = velocityVector.angleTo(new THREE.Vector3(velocityVector.x, 0, 0))
+
+        const lift_force = this.calc_lift_force(gama/* - (Math.PI / 2)*/) * 2 * alpha
+
+
+        // calculate lift torque
+        const lift_torque = diameter * lift_force.getLength() * Math.sin(alpha - (Math.PI / 2))
+
+        const drag_torque = this.drag.getLength() * diameter * Math.sin(alpha)
+
+        console.log(drag_torque)
 
         // lift is the force which is in the opposite direction of the force which cause the torque
-        let lift_torque = this.drag.multiply(-diameter)
-        lift_torque.setAngleXY(this.drag.getAngleXY() + (Math.PI / 2))
+        // let lift_torque = this.drag.multiply(-diameter)
+        // lift_torque.setAngleXY(this.drag.getAngleXY() + (Math.PI / 2))
+
+        // let lift_torque = this.drag.getLength() * diameter * Math.sin(alpha - (Math.PI / 2))
 
         // calc total torques
-        let total_torques = vector.create(0, 0, 0)
-        total_torques = total_torques
-            .add(drag_torque)
-            .add(lift_torque)
+        // let total_torques = vector.create(0, 0, 0)
+        const total_torques = drag_torque + lift_torque
 
-        console.log('drag Angle: ' + (this.drag.getAngleXY() + (Math.PI / 2)))
-
+        console.log(total_torques)
         return total_torques
     }
 
@@ -299,14 +335,15 @@ export default class Rocket {
         this.update_total_mass()
         this._update_current_height()
 
-        this.calc_ang_acc()
-        this.calc_ang_velo()
-        this.calc_ang()
+        // this.calc_ang_acc()
+        // this.calc_ang_velo()
+        // this.calc_ang()
+        //
+        // console.log(' ang_acc: ' + this.ang_acc)
+        // console.log(' ang_velo: ' + this.ang_velo)
+        // console.log(' ang: ' + this.ang)
 
-        console.log(' ang_acc: ' + this.ang_acc)
-        console.log(' ang_velo: ' + this.ang_velo)
-        console.log(' ang: ' + this.ang)
-
+        this.calc_total_torques()
         if (this.engine_running) {
             this.burnout_time += this.deltaTime
         }

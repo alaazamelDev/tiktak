@@ -129,6 +129,7 @@ var vector = {
         this._z *= val;
     },
 
+
     divideBy: function (val) {
         this._x /= val;
         this._y /= val;

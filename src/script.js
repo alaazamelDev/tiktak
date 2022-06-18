@@ -727,7 +727,7 @@ function updateOutputs() {
 }
 
 let oldElapsedTime = 0
-let currentAngle = 0
+
 const tick = () => {
 
 
@@ -743,8 +743,9 @@ const tick = () => {
     // if (currentAngle !== (rocket.nozzle_angle))
     //     currentAngle += rocket.nozzle_angle * deltaTime * 0.1
     //
-    // rocket2.rotation.z = currentAngle * 0.06
 
+    rocket2.rotation.z = (Math.PI / 2) - angle
+    //
     // currentAngle += (rocket.nozzle_angle * deltaTime)
     // rocket.nozzle_angle -= rocket.nozzle_angle * deltaTime
 
