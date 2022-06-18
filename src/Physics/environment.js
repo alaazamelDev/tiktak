@@ -8,11 +8,11 @@ export default class Environment {
 
     calc_temp(height) {
         if (height > 25000) {
-            console.log('height: ' + height)
+            // console.log('height: ' + height)
             return -131.21 + 0.00299 * height
         } else if (height >= 11000 && height <= 25000) {
             // console.log('height: ' + height)
-            return -56
+            return -56.06
         } else if (height < 11000) {
             // console.log('height: ' + height)
             return 15.04 - 0.00649 * height
@@ -23,7 +23,10 @@ export default class Environment {
         const p0 = 101325 //pascal
         const R = 8.31446 // J.mol^-1.K^-1
         const molecular_mass = 0.0286944 // Kg/mol
-        return p0 * Math.exp((-molecular_mass * gravity * height) / (R * temp))
+
+        // console.log('temp: ' + temp)
+        return p0 * Math.exp((-molecular_mass * gravity * height) / (R * (temp >= -0.01 && temp <= 0.01 ? (0.0001) : temp)))
+
     }
 
     calc_density(pressure, temp) {
@@ -36,13 +39,27 @@ export default class Environment {
     }
 
     applyDrag(rocket) {
-        let temp = this.calc_temp(rocket.height * 0.1)
-        let pressure = this.calc_pressure(rocket.height * 0.1, temp, rocket.gravity_acc)
+
+        let temp = this.calc_temp(rocket.height)
+        let pressure = this.calc_pressure(rocket.height /** 0.01*/, temp, rocket.gravity_acc)
         let density = this.calc_density(pressure, temp)
         let sqrvelo = rocket.velocity.square()
+        // console.log(sqrvelo)
         let area = this.calc_area(rocket.radius)
         let velo_unit = rocket.velocity.normalize()
-        let drag = -0.5 * sqrvelo * density * area
+        let drag = -0.5 * sqrvelo * density * area * this.drag_coefficient
         return velo_unit.multiply(drag)
     }
+
+    applyLift(rocket) {
+        let temp = this.calc_temp(rocket.height)
+        let pressure = this.calc_pressure(rocket.height /** 0.01*/, temp, rocket.gravity_acc)
+        let density = this.calc_density(pressure, temp)
+        let sqrvelo = rocket.velocity.square()
+        // console.log(sqrvelo)
+        let area = this.calc_area(rocket.radius)
+
+        return 0.5 * density * sqrvelo * area
+    }
+
 }
